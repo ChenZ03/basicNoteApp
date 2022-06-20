@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Code/ForwardSchool/Semester5/noteAppJava/app/src/main/res/drawable/divider.xml" value="0.2485" />
+        <entry key="..\:/Code/ForwardSchool/Semester5/noteAppJava/app/src/main/res/layout/activity_main.xml" value="0.358695652173913" />
+        <entry key="..\:/Code/ForwardSchool/Semester5/noteAppJava/app/src/main/res/layout/activity_note_view.xml" value="0.358695652173913" />
+        <entry key="..\:/Code/ForwardSchool/Semester5/noteAppJava/app/src/main/res/layout/divder.xml" value="0.358695652173913" />
+        <entry key="..\:/Code/ForwardSchool/Semester5/noteAppJava/app/src/main/res/layout/note_row.xml" value="0.358695652173913" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
