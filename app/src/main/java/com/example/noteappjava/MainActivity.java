@@ -1,32 +1,26 @@
 package com.example.noteappjava;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-
-import androidx.lifecycle.ViewModelProviders;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.example.noteappjava.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 
 public class MainActivity extends AppCompatActivity {
     FloatingActionButton addNote;
     RecyclerView recyclerView;
-    ActivityMainBinding binding;
 
-    private viewModel noteViewModel;
-    public static final int ADD_NOTE_REQ = 1;
-    public static final int EDIT_NOTE_REQ = 2;
+    SharedPreferences sharedPreferences;
 
     static ArrayList<String> title = new ArrayList<String>();
     static ArrayList<String> content = new ArrayList<String>();
@@ -38,81 +32,41 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        sharedPreferences = getApplicationContext().getSharedPreferences(
+                "com.example.notepadappsharedpreferences",
+                MODE_PRIVATE
+        );
 
-        recyclerView = binding.noteView;
+        HashSet<String> hashSet = (HashSet<String>) sharedPreferences.getStringSet("noteTitle", null);
+        HashSet<String> hashSet2 = (HashSet<String>) sharedPreferences.getStringSet("noteBody", null);
+        HashSet<String> hashSet3 = (HashSet<String>) sharedPreferences.getStringSet("noteTimestamp", null);
+        if(hashSet != null) {
+            title = new ArrayList<>(hashSet);
+        }
+        if(hashSet2 != null) {
+            content = new ArrayList<>(hashSet2);
+        }
+        if(hashSet3 != null) {
+            timestamp = new ArrayList<>(hashSet3);
+        }
+
+
+        recyclerView = findViewById(R.id.noteView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        noteAdapter adapter = new noteAdapter();
+        noteAdapter adapter = new noteAdapter(title, content, timestamp, this);
         recyclerView.setAdapter(adapter);
 
-        noteViewModel = ViewModelProviders.of(this).get(viewModel.class);
-        noteViewModel.getAll().observe(this, new Observer<List<NoteData>>() {
-            @Override
-            public void onChanged(List<NoteData> notes) {
-                adapter.submitList(notes);
-            }
-        });
 
-
-
-        addNote = binding.addNote;
+        addNote = findViewById(R.id.addNote);
         addNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, NoteActivity.class);
                 intent.putExtra("action", "add");
-                startActivityForResult(intent, ADD_NOTE_REQ);
+                startActivity(intent);
             }
         });
 
-        adapter.setOnItemClickListener(note -> {
-            Intent intent = new Intent(MainActivity.this, NoteActivity.class);
-            intent.putExtra("action", "edit");
-            intent.putExtra("title", note.getTitle());
-            intent.putExtra("id" , note.getId());
-            intent.putExtra("content", note.getDescription());
-            intent.putExtra("timeStamp", note.getTimeStamp());
-            startActivityForResult(intent, EDIT_NOTE_REQ);
-        });
-
-        adapter.setOnItemClickListener2(note -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("Delete Note");
-            builder.setMessage("Are you sure you want to delete this note?");
-            builder.setPositiveButton("Yes", (dialog, which) -> {
-                noteViewModel.delete(note);
-            });
-            builder.setNegativeButton("No", (dialog, which) -> {
-                dialog.dismiss();
-            });
-            builder.show();
-        });
 
     }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if(requestCode == ADD_NOTE_REQ && resultCode == RESULT_OK) {
-            String title = data.getStringExtra("title");
-            String content = data.getStringExtra("content");
-            String timestamp = data.getStringExtra("timeStamp");
-            NoteData note = new NoteData(title, content, timestamp);
-            noteViewModel.insert(note);
-        }
-        else if(resultCode == RESULT_OK && requestCode == EDIT_NOTE_REQ) {
-            String title = data.getStringExtra("title");
-            String content = data.getStringExtra("content");
-            String timestamp = data.getStringExtra("timeStamp");
-            int id = data.getIntExtra("id", -1);
-            NoteData note = new NoteData(title, content, timestamp);
-            note.setId(id);
-            noteViewModel.update(note);
-        }
-    }
-
-
-
 }
