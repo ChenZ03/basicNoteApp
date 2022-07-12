@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import android.widget.Toast;
 
+import com.example.noteappjava.databinding.ActivityNoteViewBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.HashSet;
@@ -21,18 +22,20 @@ public class NoteActivity extends AppCompatActivity {
 
     FloatingActionButton done;
     EditText title;
-    EditText content;
-    SharedPreferences sharedPreferences;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm z");
     String currentDateandTime = sdf.format(new Date());
+    ActivityNoteViewBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_view);
 
-        title = findViewById(R.id.noteTitle);
-        content = findViewById(R.id.noteBody);
+        binding = ActivityNoteViewBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        title = binding.noteTitle;
+        EditText content = binding.noteBody;
 
         String action = getIntent().getStringExtra("action");
 
@@ -41,7 +44,7 @@ public class NoteActivity extends AppCompatActivity {
             content.setText(getIntent().getStringExtra("content"));
         }
 
-        done = findViewById(R.id.done);
+        done = binding.done;
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -50,10 +53,6 @@ public class NoteActivity extends AppCompatActivity {
                 String newContent = content.getText().toString();
                 String edited;
 
-                sharedPreferences = getApplicationContext().getSharedPreferences(
-                        "com.example.notepadappsharedpreferences",
-                        MODE_PRIVATE
-                );
 
                 if(Objects.equals(action, "edit")){
                     edited = "Edited on : " + currentDateandTime;
@@ -69,17 +68,17 @@ public class NoteActivity extends AppCompatActivity {
                     MainActivity.timestamp.add(edited);
                 }
 
-                HashSet<String> hashSet = new HashSet<>(MainActivity.title);
-                HashSet<String> hashSet2 = new HashSet<>(MainActivity.content);
-                HashSet<String> hashSet3 = new HashSet<>(MainActivity.timestamp);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putStringSet("noteTitle", hashSet).apply();
-                editor.putStringSet("noteBody", hashSet2).apply();
-                editor.putStringSet("noteTimestamp", hashSet3).apply();
 
 
                 Intent intent = new Intent(NoteActivity.this, MainActivity.class);
-                startActivity(intent);
+                intent.putExtra("title", newTitle);
+                intent.putExtra("content", newContent);
+                intent.putExtra("timeStamp", edited);
+                int id = getIntent().getIntExtra("id",-1);
+                if (id != -1){
+                    intent.putExtra("id",id);
+                }
+                setResult(RESULT_OK, intent);
                 finish();
             }
         });

@@ -7,33 +7,79 @@ import android.media.Image;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 
-public class noteAdapter extends RecyclerView.Adapter<noteAdapter.ViewHolder> {
-    private ArrayList<String> title ;
-    private ArrayList<String> content ;
-    private ArrayList<String> timestamp ;
-    private SharedPreferences sharedPreferences;
-    private Context context;
+public class noteAdapter extends ListAdapter<NoteData, noteAdapter.ViewHolder> {
 
-    public noteAdapter(ArrayList<String> title, ArrayList<String> content, ArrayList<String> timestamp, Context context) {
-        this.title = title;
-        this.content = content;
-        this.context = context;
-        this.timestamp = timestamp;
+    public noteAdapter() {
+        super(DIFF_CALLBACK);
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    private static final DiffUtil.ItemCallback<NoteData> DIFF_CALLBACK = new DiffUtil.ItemCallback<NoteData>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull NoteData oldItem, @NonNull NoteData newItem) {
+            return oldItem.getId() == newItem.getId();
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull NoteData oldItem, @NonNull NoteData newItem) {
+            return oldItem.getTitle().equals(newItem.getTitle()) &&
+                    oldItem.getDescription().equals(newItem.getDescription());
+        }
+    };
+
+    private OnItemClickListener listener;
+    private OnItemClickListener2 listener2;
+
+    @NonNull
+    @Override
+    // Called when RecyclerView needs a new RecyclerView.ViewHolder of the given type to represent an item.
+    // https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView.Adapter#onCreateViewHolder(android.view.ViewGroup,%20int)
+    //This new ViewHolder should be constructed with a new View that can represent the items of the given type. You can either create a new View manually or inflate it from an XML layout file.
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.note_row, parent, false);
+        return new ViewHolder(itemView);
+    }
+
+    // Replace the contents of a view (invoked by the layout manager)
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int position) {
+
+        // Get element from your dataset at this position and replace the
+        // contents of the view with that element
+
+        NoteData noteData = getItem(position);
+
+        viewHolder.title.setText(noteData.getTitle());
+        viewHolder.time.setText(noteData.getTimeStamp());
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) { this.listener = (OnItemClickListener) listener; }
+    public interface OnItemClickListener { void onItemClick(NoteData note); }
+
+
+    public void setOnItemClickListener2(OnItemClickListener2 listener2) { this.listener2 = (OnItemClickListener2) listener2; }
+    public interface OnItemClickListener2 { void onItemClick(NoteData note); }
+
+    class ViewHolder extends RecyclerView.ViewHolder {
+
         public TextView title;
         public ImageView imageView;
         public LinearLayout linearLayout;
@@ -46,56 +92,27 @@ public class noteAdapter extends RecyclerView.Adapter<noteAdapter.ViewHolder> {
             imageView = (ImageView) view.findViewById(R.id.delete);
             linearLayout = (LinearLayout) view.findViewById(R.id.linear);
             time = (TextView) view.findViewById(R.id.timestamp);
+
+            view.setOnClickListener(v -> {
+                if (listener != null) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        listener.onItemClick(getItem(position));
+                    }
+                }
+            });
+
+            imageView.setOnClickListener(v -> {
+                if (listener2 != null) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        listener2.onItemClick(getItem(position));
+                    }
+                }
+            });
         }
+
+
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        View listItem= layoutInflater.inflate(R.layout.note_row, parent, false);
-        return new ViewHolder(listItem);
-    }
-
-    // Replace the contents of a view (invoked by the layout manager)
-    @Override
-    public void onBindViewHolder(ViewHolder viewHolder, final int position) {
-
-        // Get element from your dataset at this position and replace the
-        // contents of the view with that element
-
-        viewHolder.title.setText(title.get(position));
-        viewHolder.time.setText(timestamp.get(position));
-        viewHolder.imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                title.remove(position);
-                content.remove(position);
-                sharedPreferences = context.getSharedPreferences("com.example.notepadappsharedpreferences", Context.MODE_PRIVATE);
-                HashSet<String> hashSet = new HashSet<String>(MainActivity.title);
-                HashSet<String> hashSet2 = new HashSet<String>(MainActivity.content);
-                sharedPreferences.edit().putStringSet("noteTitle", hashSet).apply();
-                sharedPreferences.edit().putStringSet("noteBody", hashSet2).apply();
-                notifyItemRemoved(position);
-                notifyItemRangeChanged(position, title.size());
-            }
-        });
-        viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), NoteActivity.class);
-                intent.putExtra("title", title.get(position));
-                intent.putExtra("position", position);
-                intent.putExtra("content", content.get(position));
-                intent.putExtra("action", "edit");
-                v.getContext().startActivity(intent);
-            }
-        });
-    }
-
-    // Return the size of your dataset (invoked by the layout manager)
-    @Override
-    public int getItemCount() {
-        return title.size();
-    }
 }
